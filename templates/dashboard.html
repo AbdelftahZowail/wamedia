@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wamedia</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f13;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: #161622;
+            border-bottom: 1px solid #2a2a3a;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header .brand { font-size: 17px; font-weight: 600; }
+        header .brand span { color: #6c5ce7; }
+        header .right { display: flex; align-items: center; gap: 16px; }
+        .logout-btn {
+            background: none; border: 1px solid #3a3a4a;
+            color: #999; padding: 6px 14px; border-radius: 6px;
+            cursor: pointer; font-size: 13px;
+            text-decoration: none;
+        }
+        .logout-btn:hover { color: #fff; border-color: #555; }
+
+        /* Tabs */
+        nav.tabs {
+            display: flex;
+            border-bottom: 1px solid #2a2a3a;
+            padding: 0 24px;
+            background: #13131e;
+        }
+        nav.tabs button {
+            background: none; border: none;
+            color: #777; padding: 14px 24px;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all .2s;
+        }
+        nav.tabs button:hover { color: #bbb; }
+        nav.tabs button.active {
+            color: #6c5ce7;
+            border-bottom-color: #6c5ce7;
+        }
+
+        /* Content */
+        .tab-content { display: none; padding: 24px; }
+        .tab-content.active { display: block; }
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        /* Drop zone */
+        .drop-zone {
+            border: 2px dashed #2a2a3a;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all .2s;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: #6c5ce7;
+            background: rgba(108, 92, 231, 0.05);
+        }
+        .drop-zone p { color: #666; font-size: 14px; }
+        .drop-zone p strong { color: #999; }
+        .drop-zone input { display: none; }
+        .upload-status { color: #6c5ce7; font-size: 13px; margin-top: 12px; }
+
+        /* File list */
+        .file-list { display: flex; flex-direction: column; gap: 8px; }
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+        .file-row .icon { font-size: 20px; flex-shrink: 0; }
+        .file-row .name {
+            flex: 1;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .file-row .meta {
+            font-size: 12px;
+            color: #777;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .file-row .meta.expiring { color: #f77; }
+        .file-row .actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn {
+            padding: 6px 14px;
+            border: 1px solid #3a3a4a;
+            border-radius: 6px;
+            background: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+        .btn:hover { border-color: #6c5ce7; color: #fff; }
+        .btn.danger:hover { border-color: #e74c3c; color: #e74c3c; }
+        .btn.primary { background: #6c5ce7; border-color: #6c5ce7; color: #fff; }
+        .btn.primary:hover { background: #7c6cf7; }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #555;
+        }
+        .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+
+        /* Storage bar */
+        .storage-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: #161626;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+        .storage-bar .icon { font-size: 18px; }
+        .storage-bar .detail { color: #888; }
+        .storage-bar .detail strong { color: #ccc; }
+        .storage-bar .spacer { flex: 1; }
+
+        /* WhatsApp toolbar */
+        .wa-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .wa-toolbar .info { font-size: 13px; color: #777; }
+        .wa-toolbar .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .wa-toolbar input[type="text"],
+        .wa-toolbar select {
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            color: #ccc;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .wa-toolbar input[type="text"]:focus,
+        .wa-toolbar select:focus {
+            border-color: #6c5ce7;
+        }
+        .wa-toolbar input[type="text"] {
+            width: 180px;
+        }
+        .wa-toolbar input[type="text"]::placeholder {
+            color: #555;
+        }
+
+        /* Date divider */
+        .date-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 0 8px 0;
+            font-size: 12px;
+            color: #777;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .date-divider:first-child {
+            padding-top: 0;
+        }
+        .date-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #2a2a3a;
+        }
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .media-card {
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all .2s;
+            position: relative;
+        }
+        .media-card:hover { border-color: #4a4a5a; transform: translateY(-1px); }
+        .media-card[data-media-type="image"] { border-color: #2a2a5a; }
+        .media-card[data-media-type="video"] { border-color: #1a4a2a; }
+        .media-card[data-media-type="document"] { border-color: #4a3a1a; }
+        .media-card[data-media-type="image"]:hover { border-color: #4a4a7a; }
+        .media-card[data-media-type="video"]:hover { border-color: #2a6a3a; }
+        .media-card[data-media-type="document"]:hover { border-color: #6a5a2a; }
+        .media-card .preview-wrap {
+            width: 100%;
+            height: 160px;
+            background: #111118;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .media-card .preview-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .media-card .preview-wrap .placeholder {
+            font-size: 40px;
+            opacity: 0.3;
+        }
+        .media-card .preview-wrap .type-badge {
+            position: absolute;
+            top: 8px; right: 8px;
+            background: rgba(0,0,0,0.7);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #ccc;
+        }
+        .media-card .preview-wrap .play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.3);
+            font-size: 40px;
+            opacity: 0.7;
+            pointer-events: none;
+            transition: opacity .2s;
+        }
+        .media-card:hover .preview-wrap .play-overlay { opacity: 0.9; }
+        .media-card .dl-btn {
+            position: absolute;
+            top: 8px; right: 8px;
+            width: 30px; height: 30px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(0,0,0,0.7);
+            color: #ccc;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .media-card .dl-btn:hover { background: #6c5ce7; color: #fff; }
+        .media-card .batch-checkbox {
+            position: absolute;
+            top: 8px; left: 8px;
+            z-index: 10;
+            width: 22px; height: 22px;
+            accent-color: #6c5ce7;
+            cursor: pointer;
+            display: none;
+            margin: 0;
+        }
+        .batch-mode .media-card .batch-checkbox { display: block; }
+        .media-card.batch-selected {
+            border-color: #6c5ce7 !important;
+            box-shadow: 0 0 0 1px #6c5ce7;
+        }
+        .batch-mode .media-card .dl-btn { display: none; }
+        .media-card .info {
+            padding: 10px 12px;
+        }
+        .media-card .info .filename {
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .media-card .info .detail {
+            font-size: 11px;
+            color: #777;
+            display: flex;
+            justify-content: space-between;
+        }
+        .media-card .stored-dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .media-card .stored-dot.yes { background: #5f5; }
+        .media-card .stored-dot.no { background: #f55; }
+        .media-card .stored-dot.dl { background: #ff5; animation: pulse-dot 1s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            background: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .pagination button:hover { border-color: #6c5ce7; }
+        .pagination button:disabled { opacity: 0.3; cursor: default; }
+        .pagination .page-num { color: #777; font-size: 13px; }
+        .pagination .page-num-btn {
+            padding: 6px 11px; border: 1px solid #2a2a3a;
+            border-radius: 5px; background: none; color: #999;
+            cursor: pointer; font-size: 13px; min-width: 32px;
+            text-align: center;
+        }
+        .pagination .page-num-btn:hover { border-color: #6c5ce7; color: #ccc; }
+        .pagination .page-num-btn.active {
+            background: #6c5ce7; border-color: #6c5ce7; color: #fff;
+        }
+        .pagination .page-num-btn:disabled { opacity: 0.3; cursor: default; }
+        .pagination .page-dots { color: #555; font-size: 13px; padding: 0 2px; letter-spacing: 2px; }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid #333;
+            border-top-color: #6c5ce7;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: #1a1a24; border: 1px solid #2a2a3a;
+            padding: 12px 20px; border-radius: 8px;
+            font-size: 13px; z-index: 100;
+            animation: fadeIn .2s;
+            max-width: 350px;
+        }
+        .toast.error { border-color: #e74c3c; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .copy-hint { font-size: 11px; color: #666; margin-top: 4px; }
+
+        .date-nav { font-size: 13px; color: #999; margin-left: 8px; }
+
+        /* Selection bar */
+        .selection-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: #161626;
+            border-top: 1px solid #2a2a3a;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 200;
+            transform: translateY(100%);
+            transition: transform 0.25s ease;
+            pointer-events: none;
+        }
+        .selection-bar.active {
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .selection-bar .count { font-size: 14px; color: #ccc; }
+        .selection-bar .count strong { color: #6c5ce7; }
+        .selection-bar .spacer { flex: 1; }
+        .live-indicator { 
+            display: inline-flex; align-items: center; gap: 4px; 
+            font-size: 13px; font-weight: 500; 
+        }
+        .live-indicator .dot-live { color: #5f5; }
+        .live-indicator .dot-connecting { color: #ff5; }
+        .live-indicator .dot-offline { color: #f55; }
+        .media-card .preview-wrap.no-preview {
+            background: #161626;
+        }
+        .media-card .preview-wrap .file-icon-large {
+            font-size: 48px;
+            opacity: 0.5;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">💬 <span>wamedia</span></div>
+    <div class="right">
+        <a href="/setup" class="logout-btn">⚙ Chats</a>
+        <button class="logout-btn" onclick="location='/logout'">Logout</button>
+    </div>
+</header>
+
+<nav class="tabs">
+    <button class="{{ 'active' if active_tab == 'whatsapp' or active_tab == 'uploads' else '' }}" data-tab="tab-whatsapp" data-url="/whatsapp">💬 WhatsApp</button>
+    {% if has_uploads %}
+    <button class="{{ 'active' if active_tab == 'uploads' else '' }}" data-tab="tab-uploads" data-url="/">📤 Uploads</button>
+    {% endif %}
+    
+</nav>
+
+
+{% if has_uploads %}
+<!-- ========== UPLOADS TAB ========== -->
+<div class="tab-content {{ 'active' if active_tab == 'uploads' else '' }}" id="tab-uploads">
+    <div class="container">
+        <div class="drop-zone" id="drop-zone">
+            <p>Drop files here or <strong>click to browse</strong></p>
+            <p style="font-size:11px;margin-top:6px;">Max 500MB · Auto-deletes after 24h</p>
+            <input type="file" id="file-input" multiple>
+            <div class="upload-status" id="upload-status"></div>
+        </div>
+        <div class="file-list" id="file-list">
+            <div class="empty-state">
+                <div class="emoji">📭</div>
+                <p>No files uploaded yet</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ========== WHATSAPP TAB ========== -->
+<div class="tab-content {{ 'active' if active_tab == 'whatsapp' else '' }}" id="tab-whatsapp">
+    <div class="container">
+
+        <!-- Storage bar -->
+        <div class="storage-bar" id="storage-bar">
+            <span class="icon">💾</span>
+            <span class="detail">Stored: <strong id="storage-size">...</strong></span>
+            <span class="detail">Files: <strong id="storage-count">...</strong></span>
+            <span class="spacer"></span>
+            <span id="live-indicator" class="live-indicator" style="font-size:13px;display:flex;align-items:center;gap:4px;"><span class="dot dot-offline">●</span> <span class="label">Offline</span></span>
+            <button class="btn" onclick="backfillChat()" id="btn-backfill" title="Request older messages from your phone">📥 Backfill</button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="wa-toolbar">
+            <div class="info">
+                <strong id="wa-total">...</strong> files on this page
+                <span class="date-nav" id="wa-date"></span>
+            </div>
+            <div class="filter-group">
+                <button class="btn" onclick="toggleBatchMode()" id="btn-select">☐ Select</button>
+                <select id="wa-chat-filter" onchange="loadWhatsApp(1)">
+                    <option value="">All chats</option>
+                    {% for chat in configured_chats %}
+                    <option value="{{ chat.jid }}">{{ chat.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="text" id="wa-search" placeholder="Search..." onkeydown="if(event.key=='Enter')loadWhatsApp(1)">
+                <select id="wa-type-filter" onchange="loadWhatsApp(1)">
+                    <option value="">All types</option>
+                    <option value="image">🖼 Images</option>
+                    <option value="video">🎬 Videos</option>
+                    <option value="document">📁 Documents</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Top pagination -->
+        <div class="pagination" id="wa-pagination-top" style="display:none;">
+            <button onclick="loadWhatsApp(1)" id="wa-oldest-top" title="Oldest page">⏮ Oldest</button>
+            <button onclick="loadWhatsApp(waPage - 1)" id="wa-older-top">← Older</button>
+            <span id="wa-page-numbers-top"></span>
+            <button onclick="loadWhatsApp(waPage + 1)" id="wa-newer-top">Newer →</button>
+            <button onclick="loadWhatsApp('latest')" id="wa-latest-top" title="Latest page">Latest ⏭</button>
+        </div>
+
+<!-- Media grid -->
+        <div class="media-grid" id="wa-grid">
+            <div class="empty-state">
+                <div class="emoji">💬</div>
+                <p>Loading...</p>
+            </div>
+        </div>
+
+        <!-- Selection bar -->
+        <div class="selection-bar" id="selection-bar">
+            <span class="count"><strong id="sel-count">0</strong> files selected</span>
+            <span class="spacer"></span>
+            <button class="btn" onclick="cancelBatchMode()">Cancel</button>
+            <button class="btn primary" onclick="batchDownload()">⬇ Download Selected</button>
+        </div>
+
+        <!-- Bottom pagination -->
+        <div class="pagination" id="wa-pagination-bottom" style="display:none;">
+            <button onclick="loadWhatsApp(1)" id="wa-oldest-bottom" title="Oldest page">⏮ Oldest</button>
+            <button onclick="loadWhatsApp(waPage - 1)" id="wa-older-bottom">← Older</button>
+            <span id="wa-page-numbers-bottom"></span>
+            <button onclick="loadWhatsApp(waPage + 1)" id="wa-newer-bottom">Newer →</button>
+            <button onclick="loadWhatsApp('latest')" id="wa-latest-bottom" title="Latest page">Latest ⏭</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// ==================== Shared ====================
+let currentTab = "{{ active_tab }}";
+let waPage = {{ wa_page }};
+
+function switchTab(tabId, url) {
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`nav.tabs button[data-tab="${tabId}"]`).classList.add('active');
+    history.pushState(null, '', url);
+    currentTab = tabId.replace('tab-', '');
+    if (currentTab === 'whatsapp') {
+        loadWhatsApp(waPage);
+        startRealtimeSync();
+    } else {
+        stopRealtimeSync();
+    }
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+        const url = btn.dataset.url;
+        switchTab(tabId, url);
+    });
+});
+
+// ==================== Uploads ====================
+function formatSize(bytes) {
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1073741824) return (bytes / (1048576)).toFixed(1) + ' MB';
+    return (bytes / (1073741824)).toFixed(1) + ' GB';
+}
+
+async function loadFiles() {
+    try {
+        const resp = await fetch('/api/files');
+        const files = await resp.json();
+        const el = document.getElementById('file-list');
+        if (!files.length) {
+            el.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>No files uploaded yet</p></div>';
+            return;
+        }
+        el.innerHTML = files.map(f => `
+            <div class="file-row">
+                <span class="icon">📄</span>
+                <span class="name" title="${f.filename}">${f.filename}</span>
+                <span class="meta">${f.size_formatted}</span>
+                <span class="meta expiring">${f.expires_in_fmt}</span>
+                <div class="actions">
+                    <button class="btn" onclick="copyUrl('${f.url}')">Copy</button>
+                    <button class="btn" onclick="window.open('${f.url}','_blank')">DL</button>
+                    <button class="btn danger" onclick="deleteFile('${f.id}')">×</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        document.getElementById('file-list').innerHTML = '<div class="empty-state"><p style="color:#f55">Failed to load</p></div>';
+    }
+}
+
+async function copyUrl(url) {
+    try {
+        await navigator.clipboard.writeText(url);
+        showToast('Copied!');
+    } catch {
+        showToast(url, false);
+    }
+}
+
+async function deleteFile(id) {
+    if (!confirm('Delete this file?')) return;
+    try {
+        await fetch(`/api/files/${id}`, { method: 'DELETE' });
+        showToast('Deleted');
+        loadFiles();
+    } catch {
+        showToast('Failed', true);
+    }
+}
+
+// Drag & drop
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+if (dropZone) {
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => uploadFiles(fileInput.files));
+
+    dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        uploadFiles(e.dataTransfer.files);
+    });
+}
+
+async function uploadFiles(files) {
+    const status = document.getElementById('upload-status');
+    for (const file of files) {
+        if (file.size > 500 * 1024 * 1024) {
+            showToast(`${file.name}: too large (max 500MB)`, true);
+            continue;
+        }
+        status.textContent = `Uploading ${file.name}...`;
+        const form = new FormData();
+        form.append('file', file);
+        try {
+            const resp = await fetch('/upload', { method: 'POST', body: form });
+            if (resp.ok) {
+                const data = await resp.json();
+                await navigator.clipboard.writeText(data.url);
+                showToast(`✅ ${file.name} — URL copied!`);
+                loadFiles();
+            } else {
+                showToast(`❌ ${file.name}: upload failed`, true);
+            }
+        } catch {
+            showToast(`❌ ${file.name}: network error`, true);
+        }
+    }
+    status.textContent = '';
+}
+
+// ==================== WhatsApp ====================
+
+async function loadStorage() {
+    try {
+        const resp = await fetch('/api/whatsapp/storage');
+        const data = await resp.json();
+        document.getElementById('storage-size').textContent = data.size_formatted;
+        document.getElementById('storage-count').textContent = data.file_count;
+    } catch {}
+}
+
+function getCacheKey(page, type, search, chat) {
+    return `wa_media_${page}_${type || ''}_${search || ''}_${chat || ''}`;
+}
+
+async function loadWhatsApp(page, silent = false) {
+    const isLatest = page === 'latest';
+    waPage = page;
+    const search = document.getElementById('wa-search')?.value || '';
+    const type = document.getElementById('wa-type-filter')?.value || '';
+    const chat = document.getElementById('wa-chat-filter')?.value || '';
+
+    const params = new URLSearchParams();
+    params.set('page', isLatest ? 'latest' : page);
+    if (type) params.set('type', type);
+    if (search) params.set('search', search);
+    if (chat) params.set('chat', chat);
+
+    const newUrl = `/whatsapp?${params}`;
+    history.replaceState(null, '', newUrl);
+
+    const grid = document.getElementById('wa-grid');
+    const cacheKey = getCacheKey(page, type, search, chat);
+    const cachedRaw = localStorage.getItem(cacheKey);
+    let didRender = false;
+
+    // Render from cache immediately if available (local-first)
+    if (cachedRaw && !silent) {
+        try {
+            const cached = JSON.parse(cachedRaw);
+            const age = Date.now() - (cached._ts || 0);
+            waPage = cached.page;
+            renderWaGrid(cached);
+            updatePagination(cached);
+            console.log(`[media-api] CACHE hit: key=${cacheKey} age=${age}ms items=${cached.items?.length}`);
+            if (age < 60000) {
+                // Fresh cache: render without background refresh
+                loadStorage();
+                return;
+            }
+            // Stale cache: render now, refresh in background
+            didRender = true;
+        } catch {}
+    }
+
+    if (!didRender && !silent) {
+        grid.innerHTML = '<div class="empty-state"><div class="emoji">⏳</div><p>Loading media...</p></div>';
+    }
+
+    // Background fetch for fresh data
+    try {
+        const resp = await fetch(`/api/whatsapp/media?${params}`);
+        const data = await resp.json();
+        const unstored = data.items.filter(i => !i.stored).length;
+        console.log(`[media-api] FETCH: page=${data.page} items=${data.items?.length} stored=${data.items?.length - unstored} unstored=${unstored} cacheKey=${cacheKey}`);
+        data._ts = Date.now();
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        waPage = data.page;
+        // Hide grid, yield for paint, swap DOM, yield, then show (no flicker)
+        if (silent) {
+            grid.style.opacity = '0';
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    renderWaGrid(data);
+                    updatePagination(data);
+                    loadStorage();
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            grid.style.opacity = '1';
+                        });
+                    });
+                });
+            });
+        } else {
+            renderWaGrid(data);
+            updatePagination(data);
+            loadStorage();
+        }
+        // Update URL to show 'page=latest' when on last page
+        if (data.page === data.total_pages) {
+            const urlParams = new URLSearchParams({ page: 'latest' });
+            if (type) urlParams.set('type', type);
+            if (search) urlParams.set('search', search);
+            if (chat) urlParams.set('chat', chat);
+            history.replaceState(null, '', `/whatsapp?${urlParams}`);
+        }
+    } catch (err) {
+        if (!didRender && !silent) {
+            grid.innerHTML = '<div class="empty-state"><p style="color:#f55">Failed to load</p></div>';
+        }
+    }
+}
+
+function renderCardHtml(m) {
+    const isBatch = batchMode;
+    const stored = m.stored || false;
+    const thumbUrl = stored && m.has_preview ? `/wa/thumb/${m.msg_id}` : null;
+    const mediaUrl = stored && m.has_preview ? `/wa/media/${m.msg_id}` : null;
+    const selClass = selectedMsgs.has(m.msg_id) ? ' batch-selected' : '';
+    const selChecked = selectedMsgs.has(m.msg_id) ? ' checked' : '';
+    const dotClass = stored ? 'yes' : 'dl';
+    const dotTitle = stored ? 'Stored on server' : 'Downloading...';
+    const statusText = stored ? 'Stored' : 'Downloading...';
+
+    let previewHtml;
+    if (!stored) {
+        // Not stored yet — show generic placeholder
+        if (m.media_type === 'image') previewHtml = `<div class="placeholder">🖼</div>`;
+        else if (m.media_type === 'video') previewHtml = `<div class="placeholder">🎬</div><div class="play-overlay">▶</div>`;
+        else if (m.media_type === 'document') previewHtml = `<div class="placeholder">📄</div>`;
+        else previewHtml = `<div class="placeholder">📁</div>`;
+    } else if (m.has_preview) {
+        // Stored with preview — show thumbnail
+        previewHtml = `<img src="${thumbUrl}" alt="${m.filename || m.msg_id}" loading="lazy">`;
+        if (m.media_type === 'video') previewHtml += `<div class="play-overlay">▶</div>`;
+    } else {
+        // Stored but no thumbnail possible (zip, etc.) — show file-type icon
+        const icon = m.type_label?.charAt(0) === '📁' ? '📦' : (m.type_label?.split(' ')[0] || '📄');
+        previewHtml = `<div class="file-icon-large">${icon}</div>`;
+    }
+
+    // Non-preview cards: clicking triggers download directly
+    const cardHref = isBatch ? '#' : (mediaUrl || `/api/whatsapp/download/${m.msg_id}`);
+    const cardOnclick = isBatch
+        ? `event.preventDefault();event.stopPropagation();toggleSelect('${m.msg_id}')`
+        : (!mediaUrl ? `event.preventDefault();downloadSingle('${m.msg_id}')` : '');
+
+    return `
+        <a href="${cardHref}" class="media-card${selClass}" data-msg-id="${m.msg_id}" data-stored="${stored}" data-media-type="${m.media_type}" data-has-preview="${m.has_preview !== false}" onclick="${cardOnclick}" style="text-decoration:none;color:inherit;display:block;">
+            <div class="preview-wrap${m.has_preview ? '' : ' no-preview'}">
+                ${previewHtml}
+                <input type="checkbox" class="batch-checkbox" onclick="event.stopPropagation();toggleSelect('${m.msg_id}')"${selChecked}>
+                <button class="dl-btn" onclick="event.stopPropagation();downloadSingle('${m.msg_id}')" title="Download">⬇</button>
+                <span class="type-badge">${m.type_label}</span>
+            </div>
+            <div class="info">
+                <div class="filename" title="${(m.filename || m.msg_id).replace(/"/g, '&quot;')}">${m.filename || m.msg_id}</div>
+                <div class="detail">
+                    <span>${m.size_formatted}</span>
+                    <span><span class="stored-dot ${dotClass}" title="${dotTitle}"></span>${statusText}</span>
+                </div>
+                ${m.chat_name ? `<div style="font-size:10px;color:#555;margin-top:2px;">${m.chat_name}</div>` : ''}
+            </div>
+        </a>`;
+}
+
+function updateCardStored(msgId) {
+    const oldCard = document.querySelector(`.media-card[data-msg-id="${msgId}"]`);
+    if (!oldCard) { loadStorage(); return; }
+
+    // Build a synthetic item from existing card data, mark as stored
+    const item = {
+        msg_id: msgId,
+        media_type: oldCard.dataset.mediaType || 'image',
+        stored: true,
+        downloading: false,
+        has_preview: oldCard.dataset.hasPreview !== 'false',
+        filename: oldCard.querySelector('.filename')?.textContent || msgId,
+        type_label: oldCard.querySelector('.type-badge')?.textContent || 'File',
+        size_formatted: oldCard.querySelector('.detail span:first-child')?.textContent || '',
+        chat_name: oldCard.querySelector('.info > div:last-child')?.textContent || '',
+    };
+
+    oldCard.outerHTML = renderCardHtml(item);
+    loadStorage();
+}
+
+function renderWaGrid(data) {
+    lastWaData = data;
+    const grid = document.getElementById('wa-grid');
+    document.getElementById('wa-total').textContent = data.total;
+    document.getElementById('wa-date').textContent = data.date ? `— ${data.date}` : '';
+
+    if (!data.items.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>No media found</p></div>';
+        return;
+    }
+
+    let html = '';
+    let lastDay = null;
+    [...data.items].reverse().forEach(m => {
+        const day = m.date_day_iso || m.date_day;
+        if (day !== lastDay) {
+            if (lastDay !== null) html += '</div>';
+            lastDay = day;
+            html += `
+                <div class="date-divider" data-day="${m.date_day_iso}" style="grid-column:1/-1;">
+                    <span>📅</span> ${m.date_day}
+                </div>
+                <div class="media-grid" style="display:contents;">`;
+        }
+        html += renderCardHtml(m);
+    });
+
+    if (lastDay !== null) html += '</div>';
+    grid.innerHTML = html;
+
+    if (batchMode) grid.classList.add('batch-mode');
+    updateBatchBar();
+}
+
+function updatePagination(data) {
+    const totalPages = data.total_pages;
+    const cur = waPage;
+    const show = totalPages > 1;
+
+    document.getElementById('wa-pagination-top').style.display = show ? 'flex' : 'none';
+    document.getElementById('wa-pagination-bottom').style.display = show ? 'flex' : 'none';
+
+    // Enable/disable navigation buttons
+    ['Oldest', 'Older', 'Newer', 'Latest'].forEach(dir => {
+        for (const pos of ['top', 'bottom']) {
+            const el = document.getElementById(`wa-${dir.toLowerCase()}-${pos}`);
+            if (!el) return;
+            if (dir === 'Oldest' || dir === 'Older') {
+                el.disabled = cur <= 1;
+            } else {
+                el.disabled = cur >= totalPages;
+            }
+        }
+    });
+
+    // Build page number buttons
+    function pageNumbersHtml() {
+        if (totalPages <= 7) {
+            let html = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const onClick = i === totalPages ? "'latest'" : i;
+                html += `<button class="page-num-btn${i === cur ? ' active' : ''}" onclick="loadWhatsApp(${onClick})">${i}</button>`;
+            }
+            return html;
+        }
+        let html = '';
+        html += `<button class="page-num-btn${cur === 1 ? ' active' : ''}" onclick="loadWhatsApp(1)">1</button>`;
+        if (cur > 3) html += '<span class="page-dots">…</span>';
+        for (let i = Math.max(2, cur - 1); i <= Math.min(totalPages - 1, cur + 1); i++) {
+            html += `<button class="page-num-btn${i === cur ? ' active' : ''}" onclick="loadWhatsApp(${i})">${i}</button>`;
+        }
+        if (cur < totalPages - 2) html += '<span class="page-dots">…</span>';
+        html += `<button class="page-num-btn${cur === totalPages ? ' active' : ''}" onclick="loadWhatsApp('latest')">${totalPages}</button>`;
+        return html;
+    }
+
+    const numsHtml = pageNumbersHtml();
+    document.getElementById('wa-page-numbers-top').innerHTML = numsHtml;
+    document.getElementById('wa-page-numbers-bottom').innerHTML = numsHtml;
+}
+
+function downloadSingle(msgId) {
+    showToast('Downloading...');
+    window.location.href = `/api/whatsapp/download/${msgId}`;
+}
+
+async function syncWhatsApp() {
+    const btn = document.getElementById('btn-sync');
+    btn.disabled = true;
+    btn.textContent = '⏳ Syncing...';
+    showToast('Checking for new messages...');
+    try {
+        const resp = await fetch('/api/whatsapp/sync', { method: 'POST' });
+        const data = await resp.json();
+        if (data.ok) {
+            if (data.synced > 0) {
+                let msg = `📥 ${data.synced} new media`;
+                if (data.downloading) msg += ', downloading...';
+                showToast(msg);
+                await pollStorageAndRefresh();
+            } else {
+                showToast('✅ Already up to date');
+                loadWhatsApp(waPage);
+                loadStorage();
+            }
+        } else {
+            showToast('❌ Sync failed', true);
+            loadWhatsApp(waPage);
+            loadStorage();
+        }
+    } catch (err) {
+        showToast('❌ Connection error', true);
+        loadWhatsApp(waPage);
+        loadStorage();
+    }
+    btn.disabled = false;
+    btn.textContent = '🔄 Sync';
+}
+
+async function backfillChat() {
+    const chatFilter = document.getElementById('wa-chat-filter');
+    const chat = chatFilter.value;
+    if (!chat) {
+        showToast('Select a specific chat first to backfill', true);
+        return;
+    }
+    const btn = document.getElementById('btn-backfill');
+    btn.disabled = true;
+    btn.textContent = '⏳...';
+    showToast('Requesting older messages from phone...');
+    try {
+        const resp = await fetch('/api/whatsapp/backfill', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat: chat, count: 50 })
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            showToast('✅ Backfill sent — refresh in a moment to see new messages.');
+        } else {
+            showToast('❌ Backfill failed: ' + (data.error || 'unknown'), true);
+        }
+    } catch (err) {
+        showToast('❌ Connection error', true);
+    }
+    btn.disabled = false;
+    btn.textContent = '📥 Backfill';
+}
+
+async function pollStorageAndRefresh() {
+    let lastCount = -1;
+    let stableCount = 0;
+    for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+            const resp = await fetch('/api/whatsapp/storage');
+            const data = await resp.json();
+            const count = data.file_count;
+            if (count > lastCount) {
+                lastCount = count;
+                stableCount = 0;
+            } else if (count === lastCount) {
+                stableCount++;
+                if (stableCount >= 2) break;
+            }
+            document.getElementById('storage-size').textContent = data.size_formatted;
+            document.getElementById('storage-count').textContent = count;
+        } catch {}
+    }
+    loadWhatsApp(waPage);
+    loadStorage();
+}
+
+// ==================== Batch Selection ====================
+let batchMode = false;
+let selectedMsgs = new Set();
+let lastWaData = null;
+
+function toggleBatchMode() {
+    batchMode = !batchMode;
+    selectedMsgs = new Set();
+    const btn = document.getElementById('btn-select');
+    const bar = document.getElementById('selection-bar');
+    const grid = document.getElementById('wa-grid');
+
+    if (batchMode) {
+        btn.textContent = 'Cancel';
+        if (lastWaData) {
+            renderWaGrid(lastWaData);
+        } else {
+            grid.classList.add('batch-mode');
+        }
+    } else {
+        btn.textContent = '☐ Select';
+        bar.classList.remove('active');
+        grid.classList.remove('batch-mode');
+        if (lastWaData) {
+            renderWaGrid(lastWaData);
+        }
+    }
+}
+
+function cancelBatchMode() {
+    batchMode = false;
+    selectedMsgs = new Set();
+    document.getElementById('btn-select').textContent = '☐ Select';
+    document.getElementById('selection-bar').classList.remove('active');
+    document.getElementById('wa-grid').classList.remove('batch-mode');
+    if (lastWaData) {
+        renderWaGrid(lastWaData);
+    }
+}
+
+function toggleSelect(msgId) {
+    const card = document.querySelector(`.media-card[data-msg-id="${msgId}"]`);
+    const checkbox = card?.querySelector('.batch-checkbox');
+    if (selectedMsgs.has(msgId)) {
+        selectedMsgs.delete(msgId);
+        if (card) card.classList.remove('batch-selected');
+        if (checkbox) checkbox.checked = false;
+    } else {
+        selectedMsgs.add(msgId);
+        if (card) card.classList.add('batch-selected');
+        if (checkbox) checkbox.checked = true;
+    }
+    updateBatchBar();
+}
+
+function updateBatchBar() {
+    const bar = document.getElementById('selection-bar');
+    const count = document.getElementById('sel-count');
+    count.textContent = selectedMsgs.size;
+    if (selectedMsgs.size > 0) {
+        bar.classList.add('active');
+    } else {
+        bar.classList.remove('active');
+    }
+}
+
+async function batchDownload() {
+    if (selectedMsgs.size === 0) return;
+    showToast(`Downloading ${selectedMsgs.size} files...`);
+    try {
+        const resp = await fetch('/api/whatsapp/batch-download', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({msg_ids: Array.from(selectedMsgs)})
+        });
+        if (resp.ok) {
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'whatsapp-media.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`✅ Downloaded ${selectedMsgs.size} files`);
+            cancelBatchMode();
+        } else {
+            const data = await resp.json().catch(() => ({}));
+            showToast(data.error || 'Download failed', true);
+        }
+    } catch (err) {
+        showToast('Network error', true);
+    }
+}
+
+
+
+function showToast(msg, isError = false) {
+    document.querySelectorAll('.toast').forEach(t => t.remove());
+    const t = document.createElement('div');
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+// Intercept left-click on unstored media — navigate directly to handle download-on-demand
+document.getElementById('wa-grid').addEventListener('click', (e) => {
+    if (batchMode) return;
+    const card = e.target.closest('.media-card');
+    if (!card || e.target.closest('.dl-btn') || e.target.closest('.batch-checkbox')) return;
+    if (card.dataset.stored === 'true') return;
+    e.preventDefault();
+    showToast('🔄 Downloading file, please wait...');
+    window.location.href = `/wa/media/${card.dataset.msgId}`;
+});
+
+// ==================== Init ====================
+// Restore filters from URL params on page load
+(function initFromUrl() {
+    const params = new URLSearchParams(location.search);
+    const search = params.get('search');
+    const type = params.get('type');
+    const chat = params.get('chat');
+    if (search) document.getElementById('wa-search').value = search;
+    if (type) document.getElementById('wa-type-filter').value = type;
+    if (chat) document.getElementById('wa-chat-filter').value = chat;
+})();
+
+if (currentTab === 'whatsapp') {
+    const pageParam = new URLSearchParams(location.search).get('page');
+    loadWhatsApp(pageParam === 'latest' ? 'latest' : waPage).then(() => {
+        startRealtimeSync();  // Heartbeat + SSE
+    });
+} else {
+    loadFiles();
+}
+
+// ==================== Real-time Sync: Heartbeat + SSE ====================
+let _heartbeatTimer = null;
+let _eventSource = null;
+let _eventSourceTimer = null;
+let _statusTimer = null;
+let _rtActive = false;
+
+function startRealtimeSync() {
+    if (_rtActive) return;
+    _rtActive = true;
+    console.log('[rt] Starting realtime sync');
+
+    // Send initial heartbeat immediately
+    fetch('/api/whatsapp/heartbeat', { method: 'POST' }).catch(() => {});
+
+    // Heartbeat every 15s
+    clearInterval(_heartbeatTimer);
+    _heartbeatTimer = setInterval(() => {
+        fetch('/api/whatsapp/heartbeat', { method: 'POST' }).catch(() => {});
+    }, 15000);
+
+    // Connect SSE (auto-reconnect is built into EventSource)
+    connectSSE();
+
+    // Poll live status every 5s
+    updateLiveStatus();
+    clearInterval(_statusTimer);
+    _statusTimer = setInterval(updateLiveStatus, 5000);
+}
+
+function stopRealtimeSync() {
+    if (!_rtActive) return;
+    _rtActive = false;
+    console.log('[rt] Stopping realtime sync');
+    clearInterval(_heartbeatTimer); _heartbeatTimer = null;
+    clearInterval(_statusTimer); _statusTimer = null;
+    clearTimeout(_eventSourceTimer); _eventSourceTimer = null;
+    if (_eventSource) { _eventSource.close(); _eventSource = null; }
+}
+
+function connectSSE() {
+    if (_eventSource) { _eventSource.close(); _eventSource = null; }
+    console.log('[rt] Connecting SSE...');
+    const es = new EventSource('/api/whatsapp/events');
+    _eventSource = es;
+
+    let _refreshTimer = null;
+
+    es.onopen = () => console.log('[rt] SSE connected');
+    es.onmessage = (event) => {
+        try {
+            const ev = JSON.parse(event.data);
+            const eventType = ev.type || 'unknown';
+            const msgId = ev.msg_id || '';
+            console.log(`[rt] SSE event: ${eventType} msg_id=${msgId}`);
+
+            if (eventType === 'media_stored' && msgId) {
+                // Targeted update: swap just the one card, no full re-render
+                if (_refreshTimer) clearTimeout(_refreshTimer);
+                updateCardStored(msgId);
+                for (let key in localStorage) {
+                    if (key.startsWith('wa_media_')) localStorage.removeItem(key);
+                }
+                return;
+            }
+
+            // new_message — silent refresh (rAF opacity swap, no flicker)
+            if (_refreshTimer) clearTimeout(_refreshTimer);
+            _refreshTimer = setTimeout(() => {
+                for (let key in localStorage) {
+                    if (key.startsWith('wa_media_')) localStorage.removeItem(key);
+                }
+                loadWhatsApp('latest', true);
+                loadStorage();
+            }, 400);
+        } catch (e) {
+            console.log('[rt] SSE parse error:', e);
+        }
+    };
+    es.onerror = () => {
+        console.log('[rt] SSE error, will reconnect...');
+        es.close();
+        _eventSource = null;
+        if (!_rtActive) return;
+        clearTimeout(_eventSourceTimer);
+        _eventSourceTimer = setTimeout(connectSSE, 3000);
+    };
+}
+
+async function updateLiveStatus() {
+    const indicator = document.getElementById('live-indicator');
+    if (!indicator) return;
+    try {
+        const resp = await fetch('/api/whatsapp/live-status');
+        const data = await resp.json();
+        const dot = indicator.querySelector('.dot');
+        const label = indicator.querySelector('.label');
+
+        let dotClass = 'dot-offline';
+        let text = 'Offline';
+
+        if (data.status === 'live') {
+            dotClass = 'dot-live';
+            text = data.running ? 'Live' : 'Connecting';
+        }
+
+        if (dot) dot.className = 'dot ' + dotClass;
+        if (label) label.textContent = text;
+    } catch (e) {
+        const dot = indicator.querySelector('.dot');
+        const label = indicator.querySelector('.label');
+        if (dot) dot.className = 'dot dot-offline';
+        if (label) label.textContent = 'Offline';
+    }
+}
+
+// Page visibility — just refresh data when coming back, never stop sync
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && currentTab === 'whatsapp') {
+        console.log('[rt] Page became visible, refreshing data');
+        loadWhatsApp(waPage, true);
+        loadStorage();
+    }
+});
+
+// Cleanup on unload
+window.addEventListener('beforeunload', stopRealtimeSync);
+
+</script>
+
+</body>
+</html>

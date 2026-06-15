@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wamedia — Setup needed</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f13;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #f77;
+        }
+        .subtitle {
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 28px;
+            word-break: break-all;
+        }
+        .lead {
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-left: 3px solid #f77;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #ccc;
+        }
+        .issue {
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 10px;
+            padding: 20px 22px;
+            margin-bottom: 16px;
+        }
+        .issue.error { border-left: 3px solid #f77; }
+        .issue.warning { border-left: 3px solid #e7c46c; }
+        .issue-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .badge.error { background: #3a1a1a; color: #f77; }
+        .badge.warning { background: #3a321a; color: #e7c46c; }
+        .code {
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 11px;
+            color: #888;
+        }
+        .title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #eee;
+            margin-bottom: 6px;
+        }
+        .message {
+            font-size: 14px;
+            color: #bbb;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+        .fix-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        pre {
+            background: #0a0a10;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            padding: 10px 14px;
+            overflow-x: auto;
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 13px;
+            color: #6cf09a;
+            margin-bottom: 8px;
+        }
+        pre code { font-family: inherit; }
+        .doc-link {
+            font-size: 12px;
+            color: #6c5ce7;
+            text-decoration: none;
+        }
+        .doc-link:hover { text-decoration: underline; }
+        details.tech {
+            margin-top: 28px;
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            padding: 14px 18px;
+        }
+        details.tech summary {
+            cursor: pointer;
+            color: #888;
+            font-size: 13px;
+            user-select: none;
+        }
+        details.tech pre {
+            margin-top: 12px;
+            color: #f77;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .footer {
+            margin-top: 28px;
+            text-align: center;
+            color: #555;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wamedia needs setup</h1>
+        <p class="subtitle">{{ request.host }}</p>
+
+        {% if issues and issues|length == 1 %}
+        <div class="lead">
+            Wamedia hit a problem and can't continue. Run the command below to fix it.
+        </div>
+        {% elif issues %}
+        <div class="lead">
+            Wamedia hit {{ issues|length }} problems. Fix them in order — each command may unlock the next check.
+        </div>
+        {% else %}
+        <div class="lead">
+            Wamedia hit an unexpected error. The technical details are at the bottom of this page.
+        </div>
+        {% endif %}
+
+        {% for issue in issues %}
+        <div class="issue {{ issue.severity }}">
+            <div class="issue-head">
+                <span class="badge {{ issue.severity }}">{{ issue.severity }}</span>
+                <span class="code">{{ issue.code }}</span>
+            </div>
+            <div class="title">{{ issue.title }}</div>
+            <div class="message">{{ issue.message }}</div>
+            {% if issue.fix %}
+            <div class="fix-label">How to fix</div>
+            <pre><code>{{ issue.fix }}</code></pre>
+            {% endif %}
+            {% if issue.fix_command %}
+            <div class="fix-label">Run this command</div>
+            <pre><code>{{ issue.fix_command }}</code></pre>
+            {% endif %}
+            {% if issue.fix_doc_url %}
+            <a class="doc-link" href="{{ issue.fix_doc_url }}" target="_blank" rel="noopener">Docs →</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if raw_exception %}
+        <details class="tech">
+            <summary>Show technical details</summary>
+            <pre><code>{{ raw_exception }}</code></pre>
+        </details>
+        {% endif %}
+
+        <div class="footer">wamedia · self-hosted WhatsApp media browser</div>
+    </div>
+</body>
+</html>

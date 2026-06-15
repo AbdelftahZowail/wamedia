@@ -1,0 +1,33 @@
+# Runtime data
+uploads/
+previews/
+wa_media/
+wa_thumbnails/
+meta.json
+meta_wa.json
+auth.json
+config.json
+opencode.json
+
+# Environment
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

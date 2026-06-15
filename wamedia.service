@@ -1,0 +1,15 @@
+[Unit]
+Description=WaMedia — file host with WhatsApp media mirror
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/wamedia
+EnvironmentFile=/home/ubuntu/wamedia/.env
+ExecStart=/home/ubuntu/wamedia/venv/bin/python3 /home/ubuntu/wamedia/app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ info.filename or info.msg_id[:8] }} — FileHost</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a10;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: #111118;
+            border-bottom: 1px solid #1a1a2a;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        header .back {
+            color: #6c5ce7;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        header .back:hover { color: #7c6cf7; }
+        header .title {
+            font-size: 14px;
+            font-weight: 500;
+            max-width: 60%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        header .actions { display: flex; gap: 10px; }
+        .btn {
+            padding: 6px 16px;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            background: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all .2s;
+        }
+        .btn:hover { border-color: #6c5ce7; color: #fff; }
+        .btn.primary { background: #6c5ce7; border-color: #6c5ce7; color: #fff; }
+        .btn.primary:hover { background: #7c6cf7; }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .media-container {
+            max-width: 100%;
+            max-height: calc(100vh - 160px);
+        }
+        .media-container img {
+            max-width: 100%;
+            max-height: calc(100vh - 160px);
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        .media-container video {
+            max-width: 100%;
+            max-height: calc(100vh - 160px);
+            border-radius: 4px;
+        }
+        .media-container .fallback {
+            text-align: center;
+            padding: 60px;
+        }
+        .media-container .fallback .icon { font-size: 64px; margin-bottom: 16px; opacity: 0.4; }
+        .media-container .fallback .name {
+            font-size: 18px;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        .media-container .fallback .meta {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            background: #111118;
+            border-top: 1px solid #1a1a2a;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            font-size: 12px;
+            color: #666;
+        }
+        footer .caption {
+            flex: 1;
+            max-width: 70%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #888;
+        }
+        footer .size { flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="/whatsapp" class="back">← Back</a>
+    <span class="title">{{ info.filename or info.msg_id[:8] }}</span>
+    <div class="actions">
+        <a href="/api/whatsapp/download/{{ info.msg_id }}" class="btn primary">Download</a>
+    </div>
+</header>
+
+<main>
+    <div class="media-container">
+
+        {% if info.media_type == 'image' and info.media_url %}
+            <img src="{{ info.media_url }}" alt="{{ info.filename or info.msg_id }}">
+
+        {% elif info.media_type == 'video' and info.media_url %}
+            <video controls autoplay playsinline>
+                <source src="{{ info.media_url }}" type="{{ info.mime_type or 'video/mp4' }}">
+                Your browser doesn't support video playback.
+            </video>
+
+        {% elif info.media_type == 'document' and info.mime_type and 'pdf' in info.mime_type and info.media_url %}
+            <iframe src="{{ info.media_url }}#toolbar=0"
+                    width="100%" height="100%"
+                    style="min-height:calc(100vh - 200px);border:none;border-radius:4px;">
+            </iframe>
+
+        {% else %}
+            <div class="fallback">
+                <div class="icon">
+                    {% if info.media_type == 'image' %}🖼
+                    {% elif info.media_type == 'video' %}🎬
+                    {% elif info.media_type == 'document' %}📁
+                    {% else %}📄{% endif %}
+                </div>
+                <div class="name">{{ info.filename or info.msg_id[:8] }}</div>
+                <div class="meta">{{ info.size_formatted }} · {{ info.mime_type or 'unknown' }}</div>
+                {% if not info.stored %}
+                    <p style="color:#f77;font-size:13px;">File not downloaded to server yet.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    </div>
+</main>
+
+<footer>
+    <span class="caption">{{ info.caption or '' }}</span>
+    <span class="size">{{ info.date }} · {{ info.size_formatted }}</span>
+</footer>
+
+</body>
+</html>
